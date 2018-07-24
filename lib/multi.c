@@ -359,6 +359,7 @@ struct Curl_multi *curl_multi_init(void)
 CURLMcode curl_multi_add_handle(struct Curl_multi *multi,
                                 struct Curl_easy *data)
 {
+  LOGD("curl_multi_add_handle(multi=%p, data=%p)\n", multi, data);
   struct curl_llist *timeoutlist;
 
   /* First, make some basic checks that the CURLM handle is a good handle */
@@ -519,6 +520,7 @@ static CURLcode multi_done(struct connectdata **connp,
                                                after an error was detected */
                           bool premature)
 {
+  LOGD("multi_done(connp=%p, status=%d, premature=%d)", connp, status, premature);
   CURLcode result;
   struct connectdata *conn;
   struct Curl_easy *data;
@@ -556,6 +558,7 @@ static CURLcode multi_done(struct connectdata **connp,
   }
 
   /* this calls the protocol-specific function pointer previously set */
+  LOGD("multi_done(), conn->handle->done=%d", conn->handler->done);
   if(conn->handler->done)
     result = conn->handler->done(conn, status, premature);
   else
@@ -613,6 +616,8 @@ static CURLcode multi_done(struct connectdata **connp,
            conn->proxyntlm.state == NTLMSTATE_TYPE2)
 #endif
      ) || conn->bits.close || premature) {
+
+    LOGD("multi_done(), Curl_disconnect");
     CURLcode res2 = Curl_disconnect(conn, premature); /* close connection */
 
     /* If we had an error already, make sure we return that one. But
@@ -646,6 +651,7 @@ static CURLcode multi_done(struct connectdata **connp,
 CURLMcode curl_multi_remove_handle(struct Curl_multi *multi,
                                    struct Curl_easy *data)
 {
+  LOGD("curl_multi_remove_handle(multi=%p, data=%p)\n", multi, data);
   struct Curl_easy *easy = data;
   bool premature;
   bool easy_owns_conn;
@@ -666,6 +672,7 @@ CURLMcode curl_multi_remove_handle(struct Curl_multi *multi,
   premature = (data->mstate < CURLM_STATE_COMPLETED) ? TRUE : FALSE;
   easy_owns_conn = (data->easy_conn && (data->easy_conn->data == easy)) ?
     TRUE : FALSE;
+  LOGD("curl_multi_remove_handle(), premature=%d", premature);
 
   /* If the 'state' is not INIT or COMPLETED, we might need to do something
      nice to put the easy_handle in a good known state when this returns. */
@@ -686,6 +693,7 @@ CURLMcode curl_multi_remove_handle(struct Curl_multi *multi,
        request but not received its response yet, we need to close
        connection. */
     connclose(data->easy_conn, "Removed with partial response");
+    LOGD("curl_multi_remove_handle(), Removed with partial response");
     /* Set connection owner so that the DONE function closes it.  We can
        safely do this here since connection is killed. */
     data->easy_conn->data = easy;
@@ -702,11 +710,13 @@ CURLMcode curl_multi_remove_handle(struct Curl_multi *multi,
     data->dns.hostcache = NULL;
     data->dns.hostcachetype = HCACHE_NONE;
   }
+  LOGD("curl_multi_remove_handle(), data->easy_conn=%p", data->easy_conn);
 
   if(data->easy_conn) {
 
     /* we must call multi_done() here (if we still own the connection) so that
        we don't leave a half-baked one around */
+    LOGD("curl_multi_remove_handle(), easy_owns_conn=%d", easy_owns_conn);
     if(easy_owns_conn) {
 
       /* multi_done() clears the conn->data field to lose the association
@@ -1282,6 +1292,7 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
                                  struct timeval now,
                                  struct Curl_easy *data)
 {
+  LOGD("curl_runsingle(multi=%p, data=%p)\n", multi, data);
   struct Curl_message *msg = NULL;
   bool connected;
   bool async;
@@ -1331,6 +1342,7 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
 
     if(multi_ischanged(multi, TRUE)) {
       DEBUGF(infof(data, "multi changed, check CONNECT_PEND queue!\n"));
+      LOGD("curl_runsingle(), Curl_multi_process_pending_handles\n");
       Curl_multi_process_pending_handles(multi);
     }
 
@@ -1386,9 +1398,11 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
       }
     }
 
+    LOGD("curl_runsingle(), data->mstate=%d\n", data->mstate);
     switch(data->mstate) {
     case CURLM_STATE_INIT:
       /* init this transfer. */
+      LOGD("curl_runsingle(), Curl_pretransfer()\n");
       result=Curl_pretransfer(data);
 
       if(!result) {
@@ -1407,6 +1421,7 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
     case CURLM_STATE_CONNECT:
       /* Connect. We want to get a connection identifier filled in. */
       Curl_pgrsTime(data, TIMER_STARTSINGLE);
+      LOGD("curl_runsingle(), Curl_connect()\n");
       result = Curl_connect(data, &data->easy_conn,
                             &async, &protocol_connect);
       if(CURLE_NO_CONNECTION_AVAILABLE == result) {
@@ -1467,6 +1482,7 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
       else
         hostname = conn->host.name;
 
+      LOGD("curl_runsingle(), Curl_fetch_addr()\n");
       /* check if we have the name resolved by now */
       dns = Curl_fetch_addr(conn, hostname, (int)conn->port);
 
@@ -1480,6 +1496,7 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
       }
 
       if(!dns)
+        LOGD("curl_runsingle(), Curl_resolver_is_resolved()\n");
         result = Curl_resolver_is_resolved(data->easy_conn, &dns);
 
       /* Update sockets here, because the socket(s) may have been
@@ -1493,6 +1510,7 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
       if(dns) {
         /* Perform the next step in the connection phase, and then move on
            to the WAITCONNECT state */
+        LOGD("curl_runsingle(), Curl_async_resolved()\n");
         result = Curl_async_resolved(data->easy_conn, &protocol_connect);
 
         if(result)
@@ -1564,6 +1582,7 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
       break;
 
     case CURLM_STATE_SENDPROTOCONNECT:
+      LOGD("curl_runsingle(), Curl_protocol_connect()\n");
       result = Curl_protocol_connect(data->easy_conn, &protocol_connect);
       if(!protocol_connect)
         /* switch to waiting state */
@@ -1600,6 +1619,7 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
       break;
 
     case CURLM_STATE_WAITDO:
+      LOGD("curl_runsingle(), Curl_pipeline_checkget_write()\n");
       /* Wait for our turn to DO when we're pipelining requests */
       if(Curl_pipeline_checkget_write(data, data->easy_conn)) {
         /* Grabbed the channel */
@@ -1618,6 +1638,7 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
       }
       else {
         /* Perform the protocol's DO action */
+        LOGD("curl_runsingle(), multi_do()\n");
         result = multi_do(&data->easy_conn, &dophase_done);
 
         /* When multi_do() returns failure, data->easy_conn might be NULL! */
@@ -1843,6 +1864,8 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
         break;
       }
 
+      LOGD("curl_runsingle(), Curl_readwrite()\n");
+
       /* read/write data if it is ready to do so */
       result = Curl_readwrite(data->easy_conn, data, &done);
 
@@ -1857,6 +1880,7 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
         Curl_pipeline_leave_write(data->easy_conn);
 
       if(done || (result == CURLE_RECV_ERROR)) {
+        LOGD("curl_runsingle(), Curl_retry_request()\n");
         /* If CURLE_RECV_ERROR happens early enough, we assume it was a race
          * condition and the server closed the re-used connection exactly when
          * we wanted to use it, so figure out if that is indeed the case.
@@ -2098,6 +2122,7 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
 
 CURLMcode curl_multi_perform(struct Curl_multi *multi, int *running_handles)
 {
+  LOGD("curl_multi_peform(multi=%p, running_handles=%p)\n", multi, running_handles);
   struct Curl_easy *data;
   CURLMcode returncode=CURLM_OK;
   struct Curl_tree *t;
@@ -2118,6 +2143,7 @@ CURLMcode curl_multi_perform(struct Curl_multi *multi, int *running_handles)
     if(result)
       returncode = result;
 
+    LOGD("curl_multi_peform() data=data->next\n");
     data = data->next; /* operate on next handle */
   }
 
@@ -2881,6 +2907,7 @@ multi_addtimeout(struct curl_llist *timeoutlist,
 */
 void Curl_expire(struct Curl_easy *data, long milli)
 {
+  LOGD("Curl_expire(data=%p, milli=%lld)\n", data, milli);
   struct Curl_multi *multi = data->multi;
   struct timeval *nowp = &data->state.expiretime;
   int rc;

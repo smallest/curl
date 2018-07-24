@@ -63,6 +63,7 @@
  */
 bool Curl_ipvalid(struct connectdata *conn)
 {
+  LOGD("Curl_ipvalid()\n");
   if(conn->ip_version == CURL_IPRESOLVE_V6)
     /* An IPv6 address was requested and we can't get/use one */
     return FALSE;
@@ -93,6 +94,7 @@ Curl_addrinfo *Curl_getaddrinfo(struct connectdata *conn,
                                 int port,
                                 int *waitp)
 {
+  LOGD("Curl_getaddrinfo()\n");
   Curl_addrinfo *ai = NULL;
 
 #ifdef CURL_DISABLE_VERBOSE_STRINGS
@@ -101,6 +103,7 @@ Curl_addrinfo *Curl_getaddrinfo(struct connectdata *conn,
 
   *waitp = 0; /* synchronous response only */
 
+  LOGD("Curl_getaddrinfo() Curl_ipv4_resolve_r()\n");
   ai = Curl_ipv4_resolve_r(hostname, port);
   if(!ai)
     infof(conn->data, "Curl_ipv4_resolve_r failed for %s\n", hostname);
@@ -122,6 +125,7 @@ Curl_addrinfo *Curl_getaddrinfo(struct connectdata *conn,
 Curl_addrinfo *Curl_ipv4_resolve_r(const char *hostname,
                                    int port)
 {
+  LOGD("Curl_ipv4_resolve_r(hostname=%s,port=%d", hostname, port);
 #if !defined(HAVE_GETADDRINFO_THREADSAFE) && defined(HAVE_GETHOSTBYNAME_R_3)
   int res;
 #endif
@@ -148,6 +152,7 @@ Curl_addrinfo *Curl_ipv4_resolve_r(const char *hostname,
       sbufptr = sbuf;
     }
 
+    LOGD("Curl_ipv4_resolve_r(), Curl_getaddrinfo_ex()\n")
     (void)Curl_getaddrinfo_ex(hostname, sbufptr, &hints, &ai);
 
 #elif defined(HAVE_GETHOSTBYNAME_R)
@@ -170,6 +175,7 @@ Curl_addrinfo *Curl_ipv4_resolve_r(const char *hostname,
 
 #if defined(HAVE_GETHOSTBYNAME_R_5)
     /* Solaris, IRIX and more */
+    LOGD("Curl_ipv4_resolve_r(), gethostbyname_r()\n");
     h = gethostbyname_r(hostname,
                         (struct hostent *)buf,
                         (char *)buf + sizeof(struct hostent),
@@ -189,6 +195,7 @@ Curl_addrinfo *Curl_ipv4_resolve_r(const char *hostname,
 #elif defined(HAVE_GETHOSTBYNAME_R_6)
     /* Linux */
 
+    LOGD("Curl_ipv4_resolve_r(), gethostbyname_r()()\n");
     (void)gethostbyname_r(hostname,
                         (struct hostent *)buf,
                         (char *)buf + sizeof(struct hostent),
@@ -291,11 +298,14 @@ Curl_addrinfo *Curl_ipv4_resolve_r(const char *hostname,
      * gethostbyname() is the preferred one.
      */
   else {
+    LOGD("Curl_ipv4_resolve_r(), gethostbyname()()\n");
     h = gethostbyname((void*)hostname);
 #endif /* HAVE_GETADDRINFO_THREADSAFE || HAVE_GETHOSTBYNAME_R */
   }
 
   if(h) {
+
+    LOGD("Curl_ipv4_resolve_r(), Curl_he2ai()\n");
     ai = Curl_he2ai(h, port);
 
     if(buf) /* used a *_r() function */

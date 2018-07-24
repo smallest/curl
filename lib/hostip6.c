@@ -162,6 +162,7 @@ Curl_addrinfo *Curl_getaddrinfo(struct connectdata *conn,
                                 int port,
                                 int *waitp)
 {
+  LOGD("Curl_getaddrinfo(conn=%p, hostname=%s, port=%d, waitp=%d)\n", conn, hostname, port, *waitp);
   struct addrinfo hints;
   Curl_addrinfo *res;
   int error;

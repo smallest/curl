@@ -290,6 +290,7 @@ fetch_addr(struct connectdata *conn,
                 const char *hostname,
                 int port)
 {
+  LOGD("fetch_addr(conn=%p, hostname=%s, port=%d)\n", conn, hostname, port);
   char *entry_id = NULL;
   struct Curl_dns_entry *dns = NULL;
   size_t entry_len;
@@ -305,6 +306,7 @@ fetch_addr(struct connectdata *conn,
 
   /* See if its already in our dns cache */
   dns = Curl_hash_pick(data->dns.hostcache, entry_id, entry_len+1);
+  LOGD("fetch_addr(), dns=%p\n", dns);
 
   if(dns && (data->set.dns_cache_timeout != -1))  {
     /* See whether the returned entry is stale. Done before we release lock */
@@ -446,6 +448,7 @@ int Curl_resolv(struct connectdata *conn,
                 int port,
                 struct Curl_dns_entry **entry)
 {
+  LOGD("Curl_resolv(conn=%p, hostname=%s, port=%d)\n", conn, hostname, port);
   struct Curl_dns_entry *dns = NULL;
   struct Curl_easy *data = conn->data;
   CURLcode result;
@@ -472,6 +475,7 @@ int Curl_resolv(struct connectdata *conn,
 
     Curl_addrinfo *addr;
     int respwait;
+    LOGD("Curl_resolv, Curl_ipvalid()\n");
 
     /* Check what IP specifics the app has requested and if we can provide it.
      * If not, bail out. */
@@ -481,6 +485,7 @@ int Curl_resolv(struct connectdata *conn,
     /* If Curl_getaddrinfo() returns NULL, 'respwait' might be set to a
        non-zero value indicating that we need to wait for the response to the
        resolve call */
+    LOGD("Curl_resolv, Curl_getaddrinfo()\n");
     addr = Curl_getaddrinfo(conn,
 #ifdef DEBUGBUILD
                             (data->set.str[STRING_DEVICE]
@@ -494,6 +499,7 @@ int Curl_resolv(struct connectdata *conn,
         /* the response to our resolve call will come asynchronously at
            a later time, good or bad */
         /* First, check that we haven't received the info by now */
+        LOGD("Curl_resolv(), Curl_resolver_is_resolved()\n");
         result = Curl_resolver_is_resolved(conn, &dns);
         if(result) /* error detected */
           return CURLRESOLV_ERROR;
@@ -509,6 +515,7 @@ int Curl_resolv(struct connectdata *conn,
 
       /* we got a response, store it in the cache */
       dns = Curl_cache_addr(data, addr, hostname, port);
+      LOGD("Curl_resolv(), Curl_cache_addr() dns=%p\n", dns);
 
       if(data->share)
         Curl_share_unlock(data, CURL_LOCK_DATA_DNS);
@@ -570,6 +577,8 @@ int Curl_resolv_timeout(struct connectdata *conn,
                         struct Curl_dns_entry **entry,
                         long timeoutms)
 {
+
+  LOGD("Curl_resolv_timeout(conn=%p, hostname=%s, prot=%d, timeoutms=%lld)\n", conn, hostname, port, timeoutms);
 #ifdef USE_ALARM_TIMEOUT
 #ifdef HAVE_SIGACTION
   struct sigaction keep_sigact;   /* store the old struct here */
@@ -773,6 +782,7 @@ void Curl_hostcache_clean(struct Curl_easy *data,
 
 CURLcode Curl_loadhostpairs(struct Curl_easy *data)
 {
+  LOGD("Curl_loadhostpairs(), data=%p", data);
   struct curl_slist *hostp;
   char hostname[256];
   char address[256];

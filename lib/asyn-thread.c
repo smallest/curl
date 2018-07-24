@@ -265,6 +265,7 @@ static int getaddrinfo_complete(struct connectdata *conn)
  */
 static unsigned int CURL_STDCALL getaddrinfo_thread (void *arg)
 {
+  LOGD("getaddrinfo_thread()\n");
   struct thread_sync_data *tsd = (struct thread_sync_data*)arg;
   struct thread_data *td = tsd->td;
   char service[12];
@@ -272,6 +273,7 @@ static unsigned int CURL_STDCALL getaddrinfo_thread (void *arg)
 
   snprintf(service, sizeof(service), "%d", tsd->port);
 
+  LOGD("getaddrinfo_thread(), Curl_getaddrinfo_ex()\n");
   rc = Curl_getaddrinfo_ex(tsd->hostname, service, &tsd->hints, &tsd->res);
 
   if(rc != 0) {
@@ -593,6 +595,7 @@ Curl_addrinfo *Curl_resolver_getaddrinfo(struct connectdata *conn,
                                          int port,
                                          int *waitp)
 {
+  LOGD("Curl_resolver_getaddrinfo(conn=%p, hostname=%s, port=%d, waitp=%d)\n", conn, hostname, port, *waitp);
   struct addrinfo hints;
   struct in_addr in;
   Curl_addrinfo *res;

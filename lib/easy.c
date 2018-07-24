@@ -19,7 +19,6 @@
  * KIND, either express or implied.
  *
  ***************************************************************************/
-
 #include "curl_setup.h"
 
 /*
@@ -674,6 +673,7 @@ static CURLcode wait_or_timeout(struct Curl_multi *multi, struct events *ev)
  */
 static CURLcode easy_events(struct Curl_multi *multi)
 {
+  LOGD("easy_events, multi=%p\n", multi);
   struct events evs= {2, FALSE, 0, NULL, 0};
 
   /* if running event-based, do some further multi inits */
@@ -688,6 +688,7 @@ static CURLcode easy_events(struct Curl_multi *multi)
 
 static CURLcode easy_transfer(struct Curl_multi *multi)
 {
+  LOGD("easy_transfer, multi=%p\n", multi);
   bool done = FALSE;
   CURLMcode mcode = CURLM_OK;
   CURLcode result = CURLE_OK;
@@ -724,6 +725,7 @@ static CURLcode easy_transfer(struct Curl_multi *multi)
         /* got file descriptor, restart counter */
         without_fds = 0;
 
+      LOGD("easy_transfer, curl_multi_perform\n");
       mcode = curl_multi_perform(multi, &still_running);
     }
 
@@ -768,6 +770,7 @@ static CURLcode easy_transfer(struct Curl_multi *multi)
  */
 static CURLcode easy_perform(struct Curl_easy *data, bool events)
 {
+  LOGD("easy_perform(data, events)\n");
   struct Curl_multi *multi;
   CURLMcode mcode;
   CURLcode result = CURLE_OK;
@@ -780,6 +783,8 @@ static CURLcode easy_perform(struct Curl_easy *data, bool events)
     failf(data, "easy handle already used in multi handle");
     return CURLE_FAILED_INIT;
   }
+
+  LOGD("easy_perform(data, events), data->multi_easy=%p\n", data->multi_easy);
 
   if(data->multi_easy)
     multi = data->multi_easy;
@@ -804,6 +809,7 @@ static CURLcode easy_perform(struct Curl_easy *data, bool events)
       return CURLE_FAILED_INIT;
   }
 
+  LOGD("easy_perform(data, events), sigpipe_ignore()\n");
   sigpipe_ignore(data, &pipe_st);
 
   /* assign this after curl_multi_add_handle() since that function checks for
@@ -813,10 +819,12 @@ static CURLcode easy_perform(struct Curl_easy *data, bool events)
   /* run the transfer */
   result = events ? easy_events(multi) : easy_transfer(multi);
 
+  LOGD("easy_perform(data, events), curl_multi_remove_handle)\n");
   /* ignoring the return code isn't nice, but atm we can't really handle
      a failure here, room for future improvement! */
   (void)curl_multi_remove_handle(multi, data);
 
+  LOGD("easy_perform(data, events), sigpipe_restore()");
   sigpipe_restore(&pipe_st);
 
   /* The multi handle is kept alive, owned by the easy handle */
@@ -830,6 +838,7 @@ static CURLcode easy_perform(struct Curl_easy *data, bool events)
  */
 CURLcode curl_easy_perform(struct Curl_easy *data)
 {
+  LOGD("easy_perform(data)\n");
   return easy_perform(data, FALSE);
 }
 
@@ -840,6 +849,7 @@ CURLcode curl_easy_perform(struct Curl_easy *data)
  */
 CURLcode curl_easy_perform_ev(struct Curl_easy *data)
 {
+  LOGD("easy_perform_ev(data)\n");
   return easy_perform(data, TRUE);
 }
 

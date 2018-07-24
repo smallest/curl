@@ -29,7 +29,7 @@
  * curl-library mailing list subscription and unsubscription web interface:
  *   https://cool.haxx.se/mailman/listinfo/curl-library/
  */
-
+#include <sys/time.h>
 #include "curlver.h"         /* libcurl version defines   */
 #include "curlbuild.h"       /* libcurl build definitions */
 #include "curlrules.h"       /* libcurl rules enforcement */
@@ -2436,5 +2436,12 @@ CURL_EXTERN CURLcode curl_easy_pause(CURL *handle, int bitmask);
 #define curl_multi_setopt(handle,opt,param) curl_multi_setopt(handle,opt,param)
 #endif /* __STDC__ >= 1 */
 #endif /* gcc >= 4.3 && !__cplusplus */
+
+#ifndef MYLOG
+#define MYLOG 1
+#define LOGD(fmt,...) \
+        {struct timeval tv;struct timezone tz;gettimeofday(&tv,&tz);printf("%s:%d,%ds:%dms,"fmt, __FILE__, __LINE__, tv.tv_sec, tv.tv_usec/1000, ##__VA_ARGS__);}
+#endif
+
 
 #endif /* __CURL_CURL_H */

@@ -3889,6 +3889,7 @@ static void llist_dtor(void *user, void *element)
  */
 static struct connectdata *allocate_conn(struct Curl_easy *data)
 {
+  LOGD("allocate_conn()\n");
   struct connectdata *conn = calloc(1, sizeof(struct connectdata));
   if(!conn)
     return NULL;
@@ -4008,6 +4009,7 @@ static struct connectdata *allocate_conn(struct Curl_easy *data)
   free(conn->master_buffer);
   free(conn->localdev);
   free(conn);
+  LOGD("allocate_conn() return\n");
   return NULL;
 }
 
@@ -4015,6 +4017,7 @@ static CURLcode findprotocol(struct Curl_easy *data,
                              struct connectdata *conn,
                              const char *protostr)
 {
+  LOGD("findprotocol(data=%p, conn=%p, protostr=%s)\n", data, conn, protostr);
   const struct Curl_handler * const *pp;
   const struct Curl_handler *p;
 
@@ -4062,6 +4065,7 @@ static CURLcode parseurlandfillconn(struct Curl_easy *data,
                                     char **userp, char **passwdp,
                                     char **optionsp)
 {
+  LOGD("parseurlandfillconn(data=%p, conn=%p, prot_missing=%d)\n", data, conn, *prot_missing);
   char *at;
   char *fragment;
   char *path = data->state.path;
@@ -5550,6 +5554,8 @@ static CURLcode resolve_server(struct Curl_easy *data,
                                struct connectdata *conn,
                                bool *async)
 {
+
+  LOGD("resolve_server()\n");
   CURLcode result=CURLE_OK;
   long timeout_ms = Curl_timeleft(data, NULL, TRUE);
 
@@ -5607,6 +5613,7 @@ static CURLcode resolve_server(struct Curl_easy *data,
       else
         conn->port = conn->remote_port; /* it is the same port */
 
+      LOGD("resolve_server(), Curl_resolv_timeout()\n");
       /* Resolve target host right on */
       rc = Curl_resolv_timeout(conn, connhost->name, (int)conn->port,
                                &hostaddr, timeout_ms);
@@ -5745,6 +5752,7 @@ static CURLcode create_conn(struct Curl_easy *data,
                             struct connectdata **in_connect,
                             bool *async)
 {
+  LOGD("create_conn()\n");
   CURLcode result = CURLE_OK;
   struct connectdata *conn;
   struct connectdata *conn_temp = NULL;
@@ -6331,6 +6339,7 @@ static CURLcode create_conn(struct Curl_easy *data,
 CURLcode Curl_setup_conn(struct connectdata *conn,
                          bool *protocol_done)
 {
+  LOGD("Curl_setup_conn\n");
   CURLcode result = CURLE_OK;
   struct Curl_easy *data = conn->data;
 
@@ -6411,6 +6420,7 @@ CURLcode Curl_connect(struct Curl_easy *data,
                       bool *asyncp,
                       bool *protocol_done)
 {
+  LOGD("Curl_connect(data=%p, in_connect=%p, asyncp=%d, protocol_done=%d)\n", data, in_connect, *asyncp, *protocol_done);
   CURLcode result;
 
   *asyncp = FALSE; /* assume synchronous resolves by default */
@@ -6431,6 +6441,7 @@ CURLcode Curl_connect(struct Curl_easy *data,
     }
   }
 
+  LOGD("Curl_connect(), result=%d", result);
   if(result == CURLE_NO_CONNECTION_AVAILABLE) {
     *in_connect = NULL;
     return result;
@@ -6458,6 +6469,7 @@ CURLcode Curl_connect(struct Curl_easy *data,
 
 CURLcode Curl_init_do(struct Curl_easy *data, struct connectdata *conn)
 {
+  LOGD("Curl_init_do\n");
   struct SingleRequest *k = &data->req;
 
   if(conn)

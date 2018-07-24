@@ -73,7 +73,9 @@ int vms_show = 0;
  */
 static void main_checkfds(void)
 {
+  LOGD("main_checkfds()\n");
 #ifdef HAVE_PIPE
+  LOGD("main_checkfds(), HAVE_PIPE\n");
   int fd[2] = { STDIN_FILENO, STDIN_FILENO };
   while(fd[0] == STDIN_FILENO ||
         fd[0] == STDOUT_FILENO ||
@@ -128,6 +130,7 @@ static void memory_tracking_init(void)
  */
 static CURLcode main_init(struct GlobalConfig *config)
 {
+  LOGD("main_init()\n");
   CURLcode result = CURLE_OK;
 
 #if defined(__DJGPP__) || defined(__GO32__)
@@ -231,6 +234,7 @@ static void main_free(struct GlobalConfig *config)
 */
 int main(int argc, char *argv[])
 {
+  LOGD("main()\n");
   CURLcode result = CURLE_OK;
   struct GlobalConfig global;
   memset(&global, 0, sizeof(global));

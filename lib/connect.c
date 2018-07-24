@@ -981,6 +981,7 @@ static CURLcode singleipconnect(struct connectdata *conn,
                                 const Curl_addrinfo *ai,
                                 curl_socket_t *sockp)
 {
+  LOGD("singleipconnect()\n"); 
   struct Curl_sockaddr_ex addr;
   int rc = -1;
   int error = 0;
@@ -994,6 +995,7 @@ static CURLcode singleipconnect(struct connectdata *conn,
 
   *sockp = CURL_SOCKET_BAD;
 
+  LOGD("singleipconnect(), Curl_sockect()\n"); 
   result = Curl_socket(conn, ai, &addr, &sockfd);
   if(result)
     /* Failed to create the socket, but still return OK since we signal the
@@ -1149,6 +1151,7 @@ static CURLcode singleipconnect(struct connectdata *conn,
 CURLcode Curl_connecthost(struct connectdata *conn,  /* context */
                           const struct Curl_dns_entry *remotehost)
 {
+  LOGD("Curl_connecthost\n");
   struct Curl_easy *data = conn->data;
   struct timeval before = Curl_tvnow();
   CURLcode result = CURLE_COULDNT_CONNECT;
@@ -1312,6 +1315,7 @@ CURLcode Curl_socket(struct connectdata *conn,
                      struct Curl_sockaddr_ex *addr,
                      curl_socket_t *sockfd)
 {
+  LOGD("Curl_sockect()\n"); 
   struct Curl_easy *data = conn->data;
   struct Curl_sockaddr_ex dummy;
 
@@ -1351,6 +1355,7 @@ CURLcode Curl_socket(struct connectdata *conn,
                                     (struct curl_sockaddr *)addr);
   else
     /* opensocket callback not set, so simply create the socket now */
+    LOGD("Curl_sockect(), socket()\n"); 
     *sockfd = socket(addr->family, addr->socktype, addr->protocol);
 
   if(*sockfd == CURL_SOCKET_BAD)

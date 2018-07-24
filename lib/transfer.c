@@ -1318,6 +1318,7 @@ void Curl_init_CONNECT(struct Curl_easy *data)
  */
 CURLcode Curl_pretransfer(struct Curl_easy *data)
 {
+  LOGD("Curl_pretransfer(), data=%p", data);
   CURLcode result;
   if(!data->change.url) {
     /* we can't do anything without URL */
@@ -1353,6 +1354,7 @@ CURLcode Curl_pretransfer(struct Curl_easy *data)
     Curl_cookie_loadfiles(data);
 
   /* If there is a list of host pairs to deal with */
+  LOGD("Curl_pretransfer(), data->change.resolve=%d\n", data->change.resolve);
   if(data->change.resolve)
     result = Curl_loadhostpairs(data);
 

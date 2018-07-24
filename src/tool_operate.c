@@ -191,6 +191,7 @@ static curl_off_t VmsSpecialSize(const char * name,
 static CURLcode operate_do(struct GlobalConfig *global,
                            struct OperationConfig *config)
 {
+  LOGD("operate_do\n");
   char errorbuffer[CURL_ERROR_SIZE];
   struct ProgressData progressbar;
   struct getout *urlnode;
@@ -1414,6 +1415,7 @@ static CURLcode operate_do(struct GlobalConfig *global,
             result = curl_easy_perform_ev(curl);
           else
 #endif
+          LOGD("operate_do, before curl_easy_perform\n");
           result = curl_easy_perform(curl);
 
           if(!result && !outs.stream && !outs.bytes) {
@@ -1833,6 +1835,7 @@ static CURLcode operate_do(struct GlobalConfig *global,
 
 CURLcode operate(struct GlobalConfig *config, int argc, argv_item_t argv[])
 {
+  LOGD("operate()\n");
   CURLcode result = CURLE_OK;
 
   /* Setup proper locale from environment */

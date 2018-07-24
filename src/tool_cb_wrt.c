@@ -74,6 +74,7 @@ bool tool_create_output_file(struct OutStruct *outs)
 
 size_t tool_write_cb(void *buffer, size_t sz, size_t nmemb, void *userdata)
 {
+  LOGD("tool_write_cb()\n");
   size_t rc;
   struct OutStruct *outs = userdata;
   struct OperationConfig *config = outs->config;

@@ -114,5 +114,12 @@
 # define vaprintf curlx_mvaprintf
 #endif /* ENABLE_CURLX_PRINTF */
 
+#ifndef MYLOG
+#define MYLOG 1
+#define LOGD(fmt,...) \
+        printf("%s:%d,"fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+#endif
+
+
 #endif /* HEADER_CURL_CURLX_H */
 

@@ -109,6 +109,8 @@ Curl_getaddrinfo_ex(const char *nodename,
                     const struct addrinfo *hints,
                     Curl_addrinfo **result)
 {
+
+  LOGD("Curl_getaddrinfo_ex(nodename=%s. servname=%s\n", nodename, servname);
   const struct addrinfo *ai;
   struct addrinfo *aihead;
   Curl_addrinfo *cafirst = NULL;
@@ -119,7 +121,9 @@ Curl_getaddrinfo_ex(const char *nodename,
 
   *result = NULL; /* assume failure */
 
+  LOGD("Curl_getaddrinfo_ex(), getaddrinfo()\n");
   error = getaddrinfo(nodename, servname, hints, &aihead);
+  LOGD("Curl_getaddrinfo_ex(), getaddrinfo(), error=%d\n", error);
   if(error)
     return error;
 
@@ -214,6 +218,7 @@ Curl_getaddrinfo_ex(const char *nodename,
 
   *result = cafirst;
 
+  LOGD("Curl_getaddrinfo_ex(), error=%d\n", error);
   /* This is not a CURLcode */
   return error;
 }
@@ -456,6 +461,7 @@ Curl_ip2addr(int af, const void *inaddr, const char *hostname, int port)
  */
 Curl_addrinfo *Curl_str2addr(char *address, int port)
 {
+  LOGD("Curl_str2addr(address=%s, prot=%d)", address, port);
   struct in_addr in;
   if(Curl_inet_pton(AF_INET, address, &in) > 0)
     /* This is a dotted IP address 123.123.123.123-style */

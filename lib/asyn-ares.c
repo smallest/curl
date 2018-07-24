@@ -491,6 +491,7 @@ Curl_addrinfo *Curl_resolver_getaddrinfo(struct connectdata *conn,
                                          int port,
                                          int *waitp)
 {
+  LOGD("Curl_resolver_getaddrinfo(conn=%p, hostname=%s, port=%d, waitp=%d)\n", conn, hostname, port, waitp);
   char *bufp;
   struct Curl_easy *data = conn->data;
   struct in_addr in;
