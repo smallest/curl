@@ -1424,9 +1424,11 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
       LOGD("curl_runsingle(), Curl_connect()\n");
       result = Curl_connect(data, &data->easy_conn,
                             &async, &protocol_connect);
+      LOGD("curl_runsingle(), Curl_connect(), result=%d,\n", result);
       if(CURLE_NO_CONNECTION_AVAILABLE == result) {
         /* There was no connection available. We will go to the pending
            state and wait for an available connection. */
+        LOGD("curl_runsingle(), multistate(data, CURLM_STATE_CONNECT_PEND)\n");
         multistate(data, CURLM_STATE_CONNECT_PEND);
 
         /* add this handle to the list of connect-pending handles */
@@ -1439,7 +1441,9 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
 
       if(!result) {
         /* Add this handle to the send or pend pipeline */
+        LOGD("curl_runsingle(), Curl_add_handle_to_pipeline()\n");
         result = Curl_add_handle_to_pipeline(data, data->easy_conn);
+        LOGD("curl_runsingle(), Curl_add_handle_to_pipeline(), result=%d\n", result);
         if(result)
           disconnect_conn = TRUE;
         else {
@@ -1461,7 +1465,11 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
                 multistate(data, CURLM_STATE_WAITPROXYCONNECT);
               else
 #endif
-                multistate(data, CURLM_STATE_WAITCONNECT);
+		{
+                  multistate(data, CURLM_STATE_WAITCONNECT);
+
+                 LOGD("curl_runsingle(),multistate(data, CURLM_STATE_WAITCONNECT)\n");
+               }
             }
           }
         }
@@ -1564,9 +1572,9 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
       break;
 #endif
 
-    case CURLM_STATE_WAITCONNECT:
-      /* awaiting a completion of an asynch TCP connect */
+    case CURLM_STATE_WAITCONNECT: /* awaiting a completion of an asynch TCP connect */
       result = Curl_is_connected(data->easy_conn, FIRSTSOCKET, &connected);
+      LOGD("curl_runsingle(), CURLM_STATE_WAITCONNECT, Curl_is_connected(),result=%d\n", result);
       if(connected && !result) {
         rc = CURLM_CALL_MULTI_PERFORM;
         multistate(data, data->easy_conn->bits.tunnel_proxy?

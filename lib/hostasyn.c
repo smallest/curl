@@ -119,6 +119,7 @@ CURLcode Curl_addrinfo_callback(struct connectdata *conn,
 CURLcode Curl_async_resolved(struct connectdata *conn,
                              bool *protocol_done)
 {
+  LOGD("Curl_async_resolved(conn=%p, protocol_doen=%d)\n", conn, *protocol_done);
   CURLcode result;
 
   if(conn->async.dns) {
@@ -126,6 +127,7 @@ CURLcode Curl_async_resolved(struct connectdata *conn,
     conn->async.dns = NULL;
   }
 
+  LOGD("Curl_async_resolved(), Curl_setup_conn()\n");
   result = Curl_setup_conn(conn, protocol_done);
 
   if(result)

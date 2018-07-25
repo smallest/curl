@@ -5784,6 +5784,7 @@ static CURLcode create_conn(struct Curl_easy *data,
      parts for checking against the already present connections. In order
      to not have to modify everything at once, we allocate a temporary
      connection data struct and fill in for comparison purposes. */
+  LOGD("create_conn(), allocate_conn()\n");
   conn = allocate_conn(data);
 
   if(!conn) {
@@ -5844,6 +5845,7 @@ static CURLcode create_conn(struct Curl_easy *data,
     goto out;
   }
 
+  LOGD("create_conn(), parseurlandfillconn()\n");
   result = parseurlandfillconn(data, conn, &prot_missing, &user, &passwd,
                                &options);
   if(result)
@@ -6022,6 +6024,7 @@ static CURLcode create_conn(struct Curl_easy *data,
    * Process the "connect to" linked list of hostname/port mappings.
    * Do this after the remote port number has been fixed in the URL.
    *************************************************************/
+  LOGD("create_conn(), parse_connect_to_slist()\n");
   result = parse_connect_to_slist(data, conn, data->set.connect_to);
   if(result)
     goto out;
@@ -6029,6 +6032,7 @@ static CURLcode create_conn(struct Curl_easy *data,
   /*************************************************************
    * IDN-fix the hostnames
    *************************************************************/
+  LOGD("create_conn(), fix_hostname()\n");
   fix_hostname(data, conn, &conn->host);
   if(conn->bits.conn_to_host)
     fix_hostname(data, conn, &conn->conn_to_host);
@@ -6064,6 +6068,7 @@ static CURLcode create_conn(struct Curl_easy *data,
    * Setup internals depending on protocol. Needs to be done after
    * we figured out what/if proxy to use.
    *************************************************************/
+  LOGD("create_conn(), setup_connection_internals()\n");
   result = setup_connection_internals(conn);
   if(result)
     goto out;
@@ -6104,10 +6109,12 @@ static CURLcode create_conn(struct Curl_easy *data,
         goto out;
       }
 
+      LOGD("create_conn(), Curl_setup_transfer()\n");
       Curl_setup_transfer(conn, -1, -1, FALSE, NULL, /* no download */
                           -1, NULL); /* no upload */
     }
 
+    LOGD("create_conn(), Curl_init_do()\n");
     /* since we skip do_init() */
     Curl_init_do(data, conn);
 
@@ -6265,6 +6272,7 @@ static CURLcode create_conn(struct Curl_easy *data,
       goto out;
     }
     else {
+      LOGD("create_conn(), Curl_conncache_add_conn()\n");
       /*
        * This is a brand new connection, so let's store it in the connection
        * cache of ours!
@@ -6296,11 +6304,13 @@ static CURLcode create_conn(struct Curl_easy *data,
   conn->inuse = TRUE;
 
   /* Setup and init stuff before DO starts, in preparing for the transfer. */
+  LOGD("create_conn(), Curl_init_do()\n");
   Curl_init_do(data, conn);
 
   /*
    * Setup whatever necessary for a resumed transfer
    */
+  LOGD("create_conn(), setup_range()\n");
   result = setup_range(data);
   if(result)
     goto out;
@@ -6317,6 +6327,7 @@ static CURLcode create_conn(struct Curl_easy *data,
   /*************************************************************
    * Resolve the address of the server or proxy
    *************************************************************/
+  LOGD("create_conn(), resolve_server()\n");
   result = resolve_server(data, conn, async);
 
   out:
@@ -6339,7 +6350,7 @@ static CURLcode create_conn(struct Curl_easy *data,
 CURLcode Curl_setup_conn(struct connectdata *conn,
                          bool *protocol_done)
 {
-  LOGD("Curl_setup_conn\n");
+  LOGD("Curl_setup_conn()\n");
   CURLcode result = CURLE_OK;
   struct Curl_easy *data = conn->data;
 
@@ -6383,6 +6394,7 @@ CURLcode Curl_setup_conn(struct connectdata *conn,
 
   if(CURL_SOCKET_BAD == conn->sock[FIRSTSOCKET]) {
     conn->bits.tcpconnect[FIRSTSOCKET] = FALSE;
+    LOGD("Curl_setup_conn(), Curl_connecthost()\n");
     result = Curl_connecthost(conn, conn->dns_entry);
     if(result)
       return result;
@@ -6426,6 +6438,7 @@ CURLcode Curl_connect(struct Curl_easy *data,
   *asyncp = FALSE; /* assume synchronous resolves by default */
 
   /* call the stuff that needs to be called */
+  LOGD("Curl_connect(), create_conn()\n");
   result = create_conn(data, in_connect, asyncp);
 
   if(!result) {
@@ -6437,11 +6450,13 @@ CURLcode Curl_connect(struct Curl_easy *data,
       /* DNS resolution is done: that's either because this is a reused
          connection, in which case DNS was unnecessary, or because DNS
          really did finish already (synch resolver/fast async resolve) */
+      LOGD("Curl_connect(), Curl_setup_conn()\n");
       result = Curl_setup_conn(*in_connect, protocol_done);
+      LOGD("Curl_connect(), Curl_setup_conn(), result=%d\n", result);
     }
   }
 
-  LOGD("Curl_connect(), result=%d", result);
+  LOGD("Curl_connect(), result=%d\n", result);
   if(result == CURLE_NO_CONNECTION_AVAILABLE) {
     *in_connect = NULL;
     return result;

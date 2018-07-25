@@ -148,6 +148,7 @@ int Curl_socket_check(curl_socket_t readfd0, /* two sockets to read from */
                       curl_socket_t writefd, /* socket to write to */
                       long timeout_ms)       /* milliseconds to wait */
 {
+    LOGD("Curl_socket_check(timeout_ms=%lld)\n", timeout_ms);
 #ifdef HAVE_POLL_FINE
   struct pollfd pfd[3];
   int num;
@@ -169,6 +170,7 @@ int Curl_socket_check(curl_socket_t readfd0, /* two sockets to read from */
      (writefd == CURL_SOCKET_BAD)) {
     /* no sockets, just wait */
     r = Curl_wait_ms((int)timeout_ms);
+    LOGD("Curl_socket_check(), Curl_wait_ms(),r=%d", r);
     return r;
   }
 
@@ -323,6 +325,7 @@ int Curl_socket_check(curl_socket_t readfd0, /* two sockets to read from */
                &fds_err, ptimeout);
 #else
     r = select((int)maxfd + 1, &fds_read, &fds_write, &fds_err, ptimeout);
+    LOGD("Curl_socket_check(), select(),r=%d", r);
 #endif
 
     if(r != -1)

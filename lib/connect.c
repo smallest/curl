@@ -720,6 +720,7 @@ CURLcode Curl_is_connected(struct connectdata *conn,
                            int sockindex,
                            bool *connected)
 {
+  LOGD("Curl_is_connected(conn=%p, sockindex=%d, connected=%d)\n", conn, sockindex, *connected);
   struct Curl_easy *data = conn->data;
   CURLcode result = CURLE_OK;
   long allow;
@@ -763,6 +764,7 @@ CURLcode Curl_is_connected(struct connectdata *conn,
 
     /* check socket for connect */
     rc = Curl_socket_ready(CURL_SOCKET_BAD, conn->tempsock[i], 0);
+    LOGD("Curl_is_connected(), Curl_socket_ready(), rc=%d\n", rc);
 
     if(rc == 0) { /* no connection yet */
       error = 0;
@@ -869,6 +871,8 @@ CURLcode Curl_is_connected(struct connectdata *conn,
 
 void Curl_tcpnodelay(struct connectdata *conn, curl_socket_t sockfd)
 {
+
+  LOGD("Curl_tcpnodelay()\n"); 
 #if defined(TCP_NODELAY)
 #if !defined(CURL_DISABLE_VERBOSE_STRINGS)
   struct Curl_easy *data = conn->data;
@@ -943,6 +947,7 @@ static void nosigpipe(struct connectdata *conn,
 
 void Curl_sndbufset(curl_socket_t sockfd)
 {
+  LOGD("Curl_sndbufset()\n"); 
   int val = CURL_MAX_WRITE_SIZE + 32;
   int curval = 0;
   int curlen = sizeof(curval);
@@ -960,10 +965,12 @@ void Curl_sndbufset(curl_socket_t sockfd)
   if(detectOsState == DETECT_OS_VISTA_OR_LATER)
     return;
 
+  LOGD("Curl_sndbufset(), getsockopt\n"); 
   if(getsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, (char *)&curval, &curlen) == 0)
     if(curval > val)
       return;
 
+  LOGD("Curl_sndbufset(), setsockopt\n"); 
   setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, (const char *)&val, sizeof(val));
 }
 #endif
@@ -997,6 +1004,7 @@ static CURLcode singleipconnect(struct connectdata *conn,
 
   LOGD("singleipconnect(), Curl_sockect()\n"); 
   result = Curl_socket(conn, ai, &addr, &sockfd);
+  LOGD("singleipconnect(), Curl_sockect(), result=%d\n", result); 
   if(result)
     /* Failed to create the socket, but still return OK since we signal the
        lack of socket as well. This allows the parent function to keep looping
@@ -1004,6 +1012,7 @@ static CURLcode singleipconnect(struct connectdata *conn,
     return CURLE_OK;
 
   /* store remote address and port used in this connection attempt */
+  LOGD("singleipconnect(), getaddressinfo()\n"); 
   if(!getaddressinfo((struct sockaddr*)&addr.sa_addr,
                      ipaddress, &port)) {
     /* malformed address or bug in inet_ntop, try next address */
@@ -1051,6 +1060,7 @@ static CURLcode singleipconnect(struct connectdata *conn,
      || addr.family == AF_INET6
 #endif
     ) {
+    LOGD("singleipconnect(), bindlocal()\n"); 
     result = bindlocal(conn, sockfd, addr.family,
                        Curl_ipv6_scope((struct sockaddr*)&addr.sa_addr));
     if(result) {
@@ -1064,6 +1074,7 @@ static CURLcode singleipconnect(struct connectdata *conn,
     }
   }
 
+  LOGD("singleipconnect(), curlx_nonblock()\n"); 
   /* set socket non-blocking */
   (void)curlx_nonblock(sockfd, TRUE);
 
@@ -1081,19 +1092,24 @@ static CURLcode singleipconnect(struct connectdata *conn,
       endpoints.sae_srcaddrlen = 0;
       endpoints.sae_dstaddr = &addr.sa_addr;
       endpoints.sae_dstaddrlen = addr.addrlen;
+      LOGD("singleipconnect(), connectx()\n"); 
 
       rc = connectx(sockfd, &endpoints, SAE_ASSOCID_ANY,
                     CONNECT_RESUME_ON_READ_WRITE | CONNECT_DATA_IDEMPOTENT,
                     NULL, 0, NULL, NULL);
 #elif defined(MSG_FASTOPEN) /* Linux */
-      if(conn->given->flags & PROTOPT_SSL)
+      if(conn->given->flags & PROTOPT_SSL) {
+        LOGD("singleipconnect(), connect()\n"); 
         rc = connect(sockfd, &addr.sa_addr, addr.addrlen);
+      }
       else
         rc = 0; /* Do nothing */
 #endif
     }
     else {
+      LOGD("singleipconnect(), connect()\n"); 
       rc = connect(sockfd, &addr.sa_addr, addr.addrlen);
+      LOGD("singleipconnect(), connect(), rc=%d\n", rc); 
     }
 
     if(-1 == rc)
@@ -1109,6 +1125,7 @@ static CURLcode singleipconnect(struct connectdata *conn,
 #endif
 
   if(-1 == rc) {
+    LOGD("singleipconnect(), error=%d\n", error); 
     switch(error) {
     case EINPROGRESS:
     case EWOULDBLOCK:
@@ -1139,6 +1156,7 @@ static CURLcode singleipconnect(struct connectdata *conn,
   if(!result)
     *sockp = sockfd;
 
+  LOGD("singleipconnect(), result=%d\n", result); 
   return result;
 }
 
